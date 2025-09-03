@@ -1,28 +1,29 @@
 {
-    "manifest_version" :3,
-    "name": "Company DSA Questions",
-    "version": "1.0.0",
-    "description": "Daily LeetCode Questions which have been asked previously in company recruitment",
-    "permissions": [
-        "storage",
-        "notifications",
-        "alarms"
-    ],
-    "background" :{
-        "service_worker":"background.js"
-    },
-    "actions":{
-        "defualt_popup": "popup.html",
-        "default_icon": {
-            "16": "images/icon16.png",
-            "48": "images/icon48.png",
-            "128": "images/icon128.png"
-        }
-
-    },
-    "icons": {
+  "manifest_version": 3,
+  "name": "My Awesome Extension",
+  "version": "1.0",
+  "description": "A brief description of what this extension does.",
+  "permissions": [
+    "storage",
+    "activeTab"
+  ],
+  "host_permissions": [
+    "https://raw.githubusercontent.com/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "images/icon16.png",
+      "48": "images/icon48.png",
+      "128": "images/icon128.png"
+    }
+  },
+  "icons": {
     "16": "images/icon16.png",
     "48": "images/icon48.png",
     "128": "images/icon128.png"
   }
-} 
+}
