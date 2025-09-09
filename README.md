@@ -16,7 +16,6 @@ I invite anyone who wants to update the questions so that it can help others as 
 ---
 
 ## 🖼️ Screenshots
-(Add your extension screenshots here)
 
 - Popup interface  
   ![Popup Screenshot](assets/popup.png)
@@ -24,7 +23,8 @@ I invite anyone who wants to update the questions so that it can help others as 
 
 ---
 
-📂 Project Structure
+## 📂 Project Structure
+```
 ├── manifest.json
 ├── background.js
 ├── popup.html
@@ -37,7 +37,7 @@ I invite anyone who wants to update the questions so that it can help others as 
 └── assets/
     └── popup.png 
 
-
+```
 ---
 
 ## ⚡ Installation
