@@ -1,29 +1,27 @@
 {
   "manifest_version": 3,
-  "name": "My Awesome Extension",
-  "version": "1.0",
-  "description": "A brief description of what this extension does.",
-  "permissions": [
-    "storage",
-    "activeTab"
-  ],
-  "host_permissions": [
-    "https://raw.githubusercontent.com/*"
-  ],
+  "name": "LeetCode Company Problems (Local)",
+  "version": "6.0.1",
+  "description": "Select a company and browse its LeetCode problems from local files.",
+  "permissions": ["storage", "alarms", "notifications", "tabs"],
   "background": {
     "service_worker": "background.js"
   },
   "action": {
-    "default_popup": "popup.html",
-    "default_icon": {
-      "16": "images/icon16.png",
-      "48": "images/icon48.png",
-      "128": "images/icon128.png"
-    }
+    "default_popup": "popup.html"
   },
   "icons": {
     "16": "images/icon16.png",
     "48": "images/icon48.png",
     "128": "images/icon128.png"
-  }
+  },
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "config.json",
+        "companies/*.csv"
+      ],
+      "matches": ["<all_urls>"]
+    }
+  ]
 }

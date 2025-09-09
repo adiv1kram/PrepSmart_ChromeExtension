@@ -1,37 +1,68 @@
-const GITHUB_RAW_BASE_URL = 'https://raw.githubusercontent.com/hxu296/leetcode-company-wise-problems-2022/main/companies/';
 
-const COMPANY = 'Accenture';
-
-async function fetchAndStoreProblems() {
+async function loadProblemsForCompany(companyName) {
     try {
-        const response = await fetch(`${GITHUB_RAW_BASE_URL}${COMPANY}.csv`);
-        if (!response.ok) {
-            console.error(`Failed to fetch data for ${COMPANY}: ${response.statusText}`);
-            chrome.storage.local.set({ status: `Error: ${response.status} ${response.statusText}` });
-            return;
-        }
-        const csvText = await response.text();
+        const fileName = companyName.replace(/\s+/g, '') + '.csv';
+        const response = await fetch(chrome.runtime.getURL(`companies/${fileName}`));
+        if (!response.ok) throw new Error(`Failed to load CSV for ${companyName}`);
 
-        const problems = csvText;
-        chrome.storage.local.set({ [COMPANY]: problems, status: 'Success' }, () => {
-            console.log(`Successfully fetched and stored problems for ${COMPANY}.`);
-        });
+        const text = await response.text();
+        const rows = text.trim().split('\n').slice(1); // skip header row
 
+        const problems = rows.map(row => {
+            const parts = row.split(',');
+            if (parts.length >= 3) {
+                const [url, name, num] = parts;
+                return {
+                    url: url.trim(),
+                    name: name.trim(),
+                    count: parseInt(num.trim(), 10) || 0
+                };
+            }
+            return null;
+        }).filter(Boolean);
+
+        const companyKey = `problems_${companyName}`;
+        await chrome.storage.local.set({ [companyKey]: problems });
+        console.log(`Loaded ${problems.length} problems for ${companyName}`);
     } catch (error) {
-        console.error(`An error occurred while fetching data for ${COMPANY}:`, error);
-        chrome.storage.local.set({ status: `Error: ${error.message}` });
+        console.error(`Error loading problems for ${companyName}:`, error);
     }
 }
 
-chrome.runtime.onInstalled.addListener(() => {
-    console.log('Extension installed. Fetching initial data...');
-    fetchAndStoreProblems();
+// Listen for popup requests
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    if (request.action === "loadCompany") {
+        loadProblemsForCompany(request.company).then(() => sendResponse({ success: true }));
+        return true; // keep the message channel open
+    }
 });
 
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-    if (request.action === "fetchProblems") {
-        console.log('Popup requested a data fetch.');
-        fetchAndStoreProblems();
-        sendResponse({ status: 'Fetching started...' });
+// Daily notification logic
+chrome.alarms.create("dailyProblem", { periodInMinutes: 60 * 24 }); // once a day
+
+chrome.alarms.onAlarm.addListener(async (alarm) => {
+    if (alarm.name === "dailyProblem") {
+        const { selectedCompany } = await chrome.storage.local.get("selectedCompany");
+        if (!selectedCompany) return;
+
+        const companyKey = `problems_${selectedCompany}`;
+        let { [companyKey]: problems } = await chrome.storage.local.get(companyKey);
+
+        if (!problems || problems.length === 0) {
+            await loadProblemsForCompany(selectedCompany);
+            ({ [companyKey]: problems } = await chrome.storage.local.get(companyKey));
+        }
+
+        if (problems && problems.length > 0) {
+            const randomIndex = Math.floor(Math.random() * problems.length);
+            const problem = problems[randomIndex];
+            chrome.notifications.create({
+                type: "basic",
+                iconUrl: "icon.png",
+                title: `Daily ${selectedCompany} Problem`,
+                message: `${problem.name}\n(Asked ${problem.count} times)`,
+                priority: 2
+            });
+        }
     }
 });

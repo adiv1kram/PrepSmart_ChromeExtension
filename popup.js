@@ -1,64 +1,67 @@
-document.addEventListener('DOMContentLoaded', () => {
-    const statusDiv = document.getElementById('status');
-    const container = document.getElementById('problems-container');
-    const companyName = 'Accenture';
+document.addEventListener("DOMContentLoaded", async () => {
+    const companySelect = document.getElementById("company-select");
+    const problemContainer = document.getElementById("problem-container");
 
-    chrome.storage.local.get([companyName, 'status'], (result) => {
-        const problemsCSV = result[companyName];
-        const fetchStatus = result.status;
+    // Load company list from config.json
+    const response = await fetch(chrome.runtime.getURL("config.json"));
+    const companies = await response.json();
 
-        if (chrome.runtime.lastError) {
-            statusDiv.textContent = 'Error reading storage.';
-            console.error(chrome.runtime.lastError);
-            return;
-        }
-
-        if (fetchStatus && fetchStatus.startsWith('Error')) {
-            statusDiv.textContent = `Failed to fetch data. ${fetchStatus}`;
-        } else if (problemsCSV) {
-            statusDiv.style.display = 'none';
-            displayProblems(problemsCSV);
-        } else {
-            statusDiv.textContent = 'Data not available. The background script may still be fetching.';
-        }
+    companies.forEach(company => {
+        const option = document.createElement("option");
+        option.value = company;
+        option.textContent = company;
+        companySelect.appendChild(option);
     });
 
-    function displayProblems(csvText) {
-        container.innerHTML = '';
-        const rows = csvText.trim().split('\n').slice(1);
+    // Restore last selected company
+    const { selectedCompany } = await chrome.storage.local.get("selectedCompany");
+    if (selectedCompany) {
+        companySelect.value = selectedCompany;
+        await loadProblemsIntoList(selectedCompany);
+    }
 
-        if (rows.length === 0) {
-            statusDiv.textContent = 'No problems found in the data.';
-            statusDiv.style.display = 'block';
+    // When user changes company
+    companySelect.addEventListener("change", async () => {
+        const selected = companySelect.value;
+        await chrome.storage.local.set({ selectedCompany: selected });
+        await loadProblemsIntoList(selected);
+    });
+
+    async function loadProblemsIntoList(companyName) {
+        try {
+            // Ask background.js to load CSV
+            await chrome.runtime.sendMessage({ action: "loadCompany", company: companyName });
+
+            const companyKey = `problems_${companyName}`;
+            const data = await chrome.storage.local.get(companyKey);
+            const problems = data[companyKey] || [];
+
+            renderProblemList(problems, companyName);
+        } catch (err) {
+            console.error("Error loading problems:", err);
+            problemContainer.textContent = `Failed to load questions for ${companyName}.`;
+        }
+    }
+
+    function renderProblemList(problems, companyName) {
+        problemContainer.innerHTML = "";
+
+        if (problems.length === 0) {
+            problemContainer.textContent = `No questions found for ${companyName}.`;
             return;
         }
-        
-        rows.forEach(row => {
-            const columns = row.split(',');
 
-            if (columns.length < 2) {
-                console.warn('Skipping malformed row:', row);
-                return;
-            }
-            
-            const problemURL = columns[0].trim();
-            const problemTitle = columns[1].trim();
+        const ul = document.createElement("ul");
 
-            if (problemURL.startsWith('http')) {
-                const problemDiv = document.createElement('div');
-                problemDiv.className = 'problem';
-
-                const problemLink = document.createElement('a');
-                problemLink.href = problemURL;
-                problemLink.textContent = problemTitle;
-                problemLink.target = '_blank';
-                problemLink.rel = 'noopener noreferrer';
-
-                problemDiv.appendChild(problemLink);
-                container.appendChild(problemDiv);
-            } else {
-                console.error('Invalid URL detected:', problemURL, 'from row:', row);
-            }
+        problems.forEach(problem => {
+            const li = document.createElement("li");
+            li.innerHTML = `
+                <a href="${problem.url}" target="_blank">${problem.name}</a>
+                <small>Asked ${problem.count} times</small>
+            `;
+            ul.appendChild(li);
         });
+
+        problemContainer.appendChild(ul);
     }
 });
