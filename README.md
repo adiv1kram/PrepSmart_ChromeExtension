@@ -50,5 +50,11 @@ I invite anyone who wants to update the questions so that it can help others as 
 3. Enable Developer Mode (top-right corner).
 4.Click Load unpacked and select the project folder.
 5.The extension should now appear in your browser’s toolbar 🎉.
+
+## Acknowledgements
+
+- The `companies/` folder is adapted from [leetcode-company-wise-problems-2022](https://github.com/hxu296/leetcode-company-wise-problems-2022) (MIT License) with additional modifications.
+
+
    
 
