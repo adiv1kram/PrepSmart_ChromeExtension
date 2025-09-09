@@ -45,6 +45,9 @@
       border-radius: 6px;
       padding: 10px;
       margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
       transition: background 0.2s;
     }
 
@@ -52,13 +55,18 @@
       background: #f3f4f6;
     }
 
-    a {
+    .problem-info {
+      flex: 1;
+      margin-left: 8px;
+    }
+
+    .problem-info a {
       text-decoration: none;
       color: #2563eb;
       font-weight: 600;
     }
 
-    small {
+    .problem-info small {
       display: block;
       color: #6b7280;
       margin-top: 4px;
